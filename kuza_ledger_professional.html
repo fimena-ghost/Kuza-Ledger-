@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kuza Ledger — Trust-Based Work & Settlement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f2e9;
+      --surface: rgba(255,255,255,0.62);
+      --surface-strong: #fffdf9;
+      --ink: #101828;
+      --muted: #475467;
+      --line: rgba(16,24,40,0.1);
+      --brand: #166534;
+      --brand-2: #22c55e;
+      --accent: #c76a1b;
+      --accent-soft: #fff1e6;
+      --success-soft: #ecfdf3;
+      --shadow: 0 24px 60px rgba(16,24,40,0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --container: 1160px;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Inter', system-ui, sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(199,106,27,0.07), transparent 28%),
+        radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 24%),
+        var(--bg);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(16,24,40,0.045) 0.6px, transparent 0.6px);
+      background-size: 14px 14px;
+      opacity: .32;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.45), transparent 85%);
+      z-index: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(var(--container), calc(100% - 32px)); margin: 0 auto; position: relative; z-index: 1; }
+
+    .progress {
+      position: fixed; top: 0; left: 0; height: 4px; width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--brand-2)); z-index: 1000;
+    }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 999;
+      backdrop-filter: blur(16px);
+      background: rgba(247,242,233,0.72);
+      border-bottom: 1px solid rgba(16,24,40,0.06);
+    }
+
+    .topbar-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      min-height: 72px; gap: 20px;
+    }
+
+    .brandmark {
+      display: flex; align-items: center; gap: 12px; font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--ink), #1f2937);
+      color: #fff; display: grid; place-items: center;
+      box-shadow: 0 10px 20px rgba(16,24,40,0.15);
+      font-family: var(--mono); font-size: 0.9rem;
+    }
+
+    .mini-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line); border-radius: 999px;
+      padding: 8px 12px; background: rgba(255,255,255,0.6);
+      font-size: 0.8rem; color: var(--muted); font-family: var(--mono);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+
+    .mini-dot {
+      width: 8px; height: 8px; border-radius: 999px; background: var(--brand-2);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.12);
+    }
+
+    .hero {
+      padding: 52px 0 34px;
+    }
+
+    .hero-panel {
+      display: grid; grid-template-columns: 1.25fr .9fr; gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-copy, .hero-side {
+      border: 1px solid rgba(16,24,40,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,253,249,0.92));
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-copy {
+      padding: 48px;
+      min-height: 560px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      font-size: .78rem;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: clamp(3rem, 7vw, 5.6rem);
+      line-height: .97;
+      letter-spacing: -0.04em;
+      max-width: 10ch;
+      margin-bottom: 24px;
+    }
+
+    h1 .em {
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .lead {
+      max-width: 60ch;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .hero-meta {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px;
+    }
+
+    .meta-card {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 18px 18px 16px;
+    }
+
+    .meta-label {
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: .7rem;
+      color: #667085;
+      margin-bottom: 8px;
+    }
+
+    .meta-value {
+      font-size: .98rem;
+      font-weight: 600;
+    }
+
+    .hero-side {
+      padding: 32px;
+      background:
+        linear-gradient(180deg, rgba(16,24,40,.98), rgba(16,24,40,.92)),
+        radial-gradient(circle at 20% 20%, rgba(34,197,94,.28), transparent 30%);
+      color: #f8fafc;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+
+    .side-code {
+      font-family: var(--mono);
+      font-size: .76rem;
+      color: rgba(248,250,252,.56);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .big-kl {
+      font-family: var(--serif);
+      font-size: clamp(6rem, 14vw, 10rem);
+      line-height: .9;
+      color: rgba(255,255,255,.08);
+      text-align: right;
+      user-select: none;
+      margin: 18px 0 8px;
+    }
+
+    .side-statement {
+      font-size: 1.02rem;
+      color: rgba(248,250,252,.8);
+      max-width: 34ch;
+    }
+
+    .principles {
+      display: grid; gap: 12px; margin-top: 26px;
+    }
+
+    .principle {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px 14px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+    }
+
+    .principle-num {
+      font-family: var(--mono); color: rgba(255,255,255,.5); font-size: .8rem;
+      min-width: 28px;
+    }
+
+    .principle strong { display: block; margin-bottom: 2px; }
+    .principle span { color: rgba(255,255,255,.72); font-size: .94rem; }
+
+    .section {
+      padding: 40px 0;
+    }
+
+    .section-head {
+      display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 22px;
+    }
+
+    .section-kicker {
+      font-family: var(--mono);
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 12ch;
+    }
+
+    .section-note {
+      max-width: 38ch; color: var(--muted);
+    }
+
+    .problem-card {
+      padding: 34px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, #0f172a, #111827 55%, #0b1220);
+      color: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .problem-card::before {
+      content: "“";
+      position: absolute; top: -20px; left: 20px;
+      font-family: var(--serif); font-size: 12rem; line-height: 1;
+      color: rgba(255,255,255,.05);
+    }
+
+    .problem-text {
+      position: relative; z-index: 1;
+      font-size: clamp(1.35rem, 2.4vw, 2rem);
+      line-height: 1.45;
+      max-width: 42ch;
+      color: rgba(255,255,255,.92);
+    }
+
+    .problem-text .highlight { color: #fdba74; }
+
+    .flow {
+      margin-top: 28px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 40px rgba(16,24,40,.05);
+      background: rgba(255,255,255,.58);
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 88px 1fr 240px;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      transition: transform .22s ease, background .22s ease;
+      position: relative;
+    }
+
+    .step:last-child { border-bottom: none; }
+    .step:hover { background: rgba(255,255,255,.88); transform: translateY(-1px); }
+
+    .step.featured {
+      background: linear-gradient(90deg, rgba(22,101,52,.98), rgba(34,197,94,.88));
+      color: white;
+    }
+
+    .step-index, .step-body, .step-outcome { padding: 24px; }
+    .step-index {
+      border-right: 1px solid var(--line);
+      font-family: var(--mono); font-size: .8rem; color: #98a2b3;
+    }
+    .step.featured .step-index { color: rgba(255,255,255,.6); border-right-color: rgba(255,255,255,.12); }
+
+    .step-tag {
+      font-family: var(--mono);
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin-bottom: 6px;
+      color: #667085;
+    }
+    .step.featured .step-tag { color: rgba(255,255,255,.72); }
+
+    .step-title {
+      font-family: var(--serif);
+      font-size: 1.45rem;
+      margin-bottom: 8px;
+    }
+
+    .step-desc { color: var(--muted); max-width: 58ch; }
+    .step.featured .step-desc { color: rgba(255,255,255,.88); }
+
+    .outcome-label {
+      font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem;
+      color: #98a2b3; margin-bottom: 8px;
+    }
+    .step.featured .outcome-label { color: rgba(255,255,255,.6); }
+    .outcome-text { font-size: .92rem; color: #475467; }
+    .step.featured .outcome-text { color: rgba(255,255,255,.88); }
+
+    .duo {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--line);
+      box-shadow: 0 16px 34px rgba(16,24,40,.04);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+    }
+
+    .card.success { background: linear-gradient(180deg, #f6fffa, #ecfdf3); }
+    .card.warn { background: linear-gradient(180deg, #fffaf5, #fff1e6); }
+
+    .card-label {
+      font-family: var(--mono);
+      font-size: .68rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .success .card-label { color: var(--brand); }
+
+    .card h3 {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .card p { color: var(--muted); }
+
+    .footer {
+      padding: 18px 0 56px;
+    }
+
+    .footer-panel {
+      background: #101828;
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      display: grid; grid-template-columns: 1.3fr .7fr; gap: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .footer-panel h3 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .footer-panel p { color: rgba(255,255,255,.72); max-width: 58ch; }
+
+    .signature {
+      justify-self: end;
+      text-align: right;
+      border-left: 1px solid rgba(255,255,255,.1);
+      padding-left: 24px;
+    }
+
+    .signature-name {
+      font-family: var(--serif);
+      font-size: 1.35rem;
+      color: rgba(255,255,255,.92);
+      margin-bottom: 8px;
+    }
+
+    .signature-meta {
+      font-family: var(--mono);
+      font-size: .76rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: rgba(255,255,255,.52);
+      line-height: 1.8;
+    }
+
+    .fade {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .fade.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 980px) {
+      .hero-panel, .footer-panel, .duo, .hero-meta { grid-template-columns: 1fr; }
+      .step { grid-template-columns: 68px 1fr; }
+      .step-outcome { border-top: 1px solid var(--line); grid-column: 1 / -1; }
+      .footer-panel { padding: 26px; }
+      .signature { justify-self: start; text-align: left; border-left: 0; padding-left: 0; border-top: 1px solid rgba(255,255,255,.1); padding-top: 20px; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner { min-height: 64px; }
+      .hero-copy, .hero-side, .problem-card, .card, .footer-panel { padding: 22px; }
+      .hero { padding-top: 28px; }
+      .step { grid-template-columns: 1fr; }
+      .step-index { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+      h1 { max-width: none; }
+      .section-head { display: block; }
+      .section-note { margin-top: 12px; }
+      .mini-pill { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brandmark">
+        <div class="brand-icon">KL</div>
+        <div>
+          <div style="font-size: 1rem;">Kuza Ledger</div>
+          <div style="font-size: .78rem; color: #667085;">Trust-Based Work &amp; Settlement</div>
+        </div>
+      </div>
+      <div class="mini-pill"><span class="mini-dot"></span> Alpha / 2026</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <div class="hero-panel fade">
+        <div class="hero-copy">
+          <div>
+            <div class="eyebrow">African Leadership University · VIS Project</div>
+            <h1>Work that <span class="em">keeps moving</span> even when cash does not.</h1>
+            <p class="lead">
+              Kuza Ledger is a trust-based work and settlement system designed for communities where liquidity is unstable, digital payments are not always trusted, and good work too often stops because value cannot move at the moment it is created.
+            </p>
+          </div>
+
+          <div class="hero-meta">
+            <div class="meta-card">
+              <div class="meta-label">Project Context</div>
+              <div class="meta-value">Virtual Internship Simulation (VIS)</div>
+            </div>
+            <div class="meta-card">
+              <div class="meta-label">Core Promise</div>
+              <div class="meta-value">Protect job continuity during cash shortages</div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="hero-side">
+          <div>
+            <div class="side-code">Concept Note · Community Finance Infrastructure</div>
+            <div class="big-kl">KL</div>
+            <p class="side-statement">
+              Instead of letting useful work collapse, Kuza Ledger records value first, manages trust carefully, and converts that value into cash when liquidity returns.
+            </p>
+          </div>
+
+          <div class="principles">
+            <div class="principle">
+              <div class="principle-num">01</div>
+              <div><strong>Trust first</strong><span>Verification is grounded in local recognition and community accountability.</span></div>
+            </div>
+            <div class="principle">
+              <div class="principle-num">02</div>
+              <div><strong>Value preserved</strong><span>Completed work is recorded, not lost, when immediate payment is unavailable.</span></div>
+            </div>
+            <div class="principle">
+              <div class="principle-num">03</div>
+              <div><strong>Settlement anchored</strong><span>Institutions and SMEs help convert pooled credits into cash through planned cycles.</span></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section wrap fade">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">The Problem</div>
+          <h2>When payment fails, work stops.</h2>
+        </div>
+        <p class="section-note">
+          The issue is not always a lack of demand, labor, or willingness. In many communities, the real breakdown happens at the point where value must be exchanged.
+        </p>
+      </div>
+
+      <div class="problem-card">
+        <p class="problem-text">
+          Jobs exist across communities, but they often collapse when cash is scarce or digital payments are mistrusted. Work is delayed, reduced, or abandoned — not because <span class="highlight">demand or labor is missing</span>, but because the mechanism for settling value breaks down.
+        </p>
+      </div>
+    </section>
+
+    <section class="section wrap fade">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">The Solution</div>
+          <h2>How Kuza Ledger works in practice</h2>
+        </div>
+        <p class="section-note">
+          The model is designed to keep economic activity alive, manage trust risk transparently, and bridge the gap between completed work and eventual cash settlement.
+        </p>
+      </div>
+
+      <div class="flow">
+        <article class="step">
+          <div class="step-index">01</div>
+          <div class="step-body">
+            <div class="step-tag">Onboarding</div>
+            <div class="step-title">Trust-Based Entry</div>
+            <p class="step-desc">Workers and employers are verified by trusted community agents using local recognition, accountability, and social proof rather than depending entirely on formal banking rails.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">What this solves</div>
+            <div class="outcome-text">Reduces friction at the point of access and builds confidence before work begins.</div>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-index">02</div>
+          <div class="step-body">
+            <div class="step-tag">Execution</div>
+            <div class="step-title">Work Continues</div>
+            <p class="step-desc">Jobs and services are carried out as agreed, even when immediate payment is unavailable. The system is designed so liquidity problems do not automatically cancel productive activity.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">What this solves</div>
+            <div class="outcome-text">Prevents unnecessary disruption to livelihoods and business operations.</div>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-index">03</div>
+          <div class="step-body">
+            <div class="step-tag">Value Capture</div>
+            <div class="step-title">Work Credits Are Issued</div>
+            <p class="step-desc">Completed work is recorded as structured credits within a community trust ledger, ensuring the value created by labor is acknowledged and preserved rather than disappearing into informal uncertainty.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">What this solves</div>
+            <div class="outcome-text">Creates a reliable record of who delivered value and what is owed.</div>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-index">04</div>
+          <div class="step-body">
+            <div class="step-tag">Governance</div>
+            <div class="step-title">Risk Is Contained</div>
+            <p class="step-desc">Credit limits, time windows, transparent records, and community oversight reduce abuse, contain debt exposure, and make the system more trustworthy over time.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">What this solves</div>
+            <div class="outcome-text">Balances flexibility with discipline so trust does not become disorder.</div>
+          </div>
+        </article>
+
+        <article class="step featured">
+          <div class="step-index">05</div>
+          <div class="step-body">
+            <div class="step-tag">Settlement</div>
+            <div class="step-title">Anchored Settlement Converts Credits to Cash</div>
+            <p class="step-desc">Pre-identified buyers, SMEs, cooperatives, or institutions settle accumulated credits in scheduled cycles once liquidity becomes available, giving the system a realistic path back to cash.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">Why this matters</div>
+            <div class="outcome-text">This is the bridge between trust-based exchange and real monetary resolution.</div>
+          </div>
+        </article>
+
+        <article class="step">
+          <div class="step-index">06</div>
+          <div class="step-body">
+            <div class="step-tag">Outcome</div>
+            <div class="step-title">Workers Get Paid and the Cycle Holds</div>
+            <p class="step-desc">Workers receive compensation, employers keep operating, and communities protect economic momentum even during periods of cash stress.</p>
+          </div>
+          <div class="step-outcome">
+            <div class="outcome-label">What this creates</div>
+            <div class="outcome-text">A stronger local economy that can keep functioning under pressure.</div>
+          </div>
+        </article>
+      </div>
+
+      <div class="duo">
+        <div class="card success fade">
+          <div class="card-label">Liquidity Resolution</div>
+          <h3>Value is recorded now, settled later</h3>
+          <p>
+            Kuza Ledger does not assume cash exists at the exact moment work is completed. Instead, it preserves value first and then converts that value through settlement partners during planned liquidity windows.
+          </p>
+        </div>
+
+        <div class="card warn fade">
+          <div class="card-label">Strategic Tradeoff</div>
+          <h3>Trust risk is accepted to protect job continuity</h3>
+          <p>
+            The model deliberately accepts a higher need for governance, verification, and oversight in exchange for keeping livelihoods active when conventional payment systems cannot respond fast enough.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap fade">
+    <div class="footer-panel">
+      <div>
+        <h3>Kuza Ledger</h3>
+        <p>
+          This venture concept was developed as part of the Virtual Internship Simulation at African Leadership University. It presents a community-centered way of protecting work, dignity, and local economic continuity when liquidity becomes unreliable.
+        </p>
+      </div>
+      <div class="signature">
+        <div class="signature-name">Imena Fleury</div>
+        <div class="signature-meta">
+          Alpha · 2026<br>
+          African Leadership University
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const progress = document.getElementById('progress');
+    const faders = document.querySelectorAll('.fade');
+
+    window.addEventListener('scroll', () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const value = max > 0 ? (window.scrollY / max) * 100 : 0;
+      progress.style.width = value + '%';
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('show');
+      });
+    }, { threshold: 0.12 });
+
+    faders.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
